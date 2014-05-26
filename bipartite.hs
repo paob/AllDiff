@@ -1,9 +1,8 @@
 module Bipartite where
 
-import Data.List
-import Data.Maybe
-import Control.Applicative
-import Control.Monad
+import Data.List (find)
+import Data.Maybe (fromJust)
+import Control.Applicative ((<$>))
 
 data NodeX = X Int deriving (Show, Eq)
 data NodeY = Y Int deriving (Show, Eq)
@@ -16,19 +15,19 @@ data Graph = Graph [NodeX] [NodeY] [Edge] deriving (Show, Eq)
 
 data Matching = Matching [Edge]
 
-(><) :: Functor f =>
-     [Edge]
-     -> ((Edge -> Bool) -> [Edge] -> f Edge)
-     -> Node
+graph :: Functor f =>
+     ((Edge -> Bool) -> [Edge] -> f Edge)
+     -> Node 
+     -> [Edge]
      -> f Node
-(><) es f (Nx x) = (Ny . snd) <$> f (\(u, _) -> u == x) es
-(><) es f (Ny y) = (Nx . fst) <$> f (\(_, v) -> v == y) es
+graph f (Nx x) es = (Ny . snd) <$> f (\(u, _) -> u == x) es
+graph f (Ny y) es = (Nx . fst) <$> f (\(_, v) -> v == y) es
 
 neighbours :: Graph -> Node -> [Node]
-neighbours (Graph _ _ es) n = (><) es filter n
+neighbours (Graph _ _ es) n = graph filter n es
 
 matched :: Matching -> Node -> Maybe Node
-matched (Matching es) n = (><) es find n
+matched (Matching es) n = graph find n es
 
 -- difference
 a |-- b = filter (\x -> not $ x `elem` b) a
