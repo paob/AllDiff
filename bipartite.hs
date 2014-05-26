@@ -16,13 +16,19 @@ data Graph = Graph [NodeX] [NodeY] [Edge] deriving (Show, Eq)
 
 data Matching = Matching [Edge]
 
+(><) :: Functor f =>
+     [Edge]
+     -> ((Edge -> Bool) -> [Edge] -> f Edge)
+     -> Node
+     -> f Node
+(><) es f (Nx x) = (Ny . snd) <$> f (\(u, _) -> u == x) es
+(><) es f (Ny y) = (Nx . fst) <$> f (\(_, v) -> v == y) es
+
 neighbours :: Graph -> Node -> [Node]
-neighbours (Graph _ _ es) (Nx x) = (Ny . snd) <$> filter (\(u, v) -> u == x) es
-neighbours (Graph _ _ es) (Ny y) = (Nx . fst) <$> filter (\(u, v) -> v == y) es
+neighbours (Graph _ _ es) n = (><) es filter n
 
 matched :: Matching -> Node -> Maybe Node
-matched (Matching es) (Nx x) = (Ny . snd) <$> find (\(u, v) -> u == x) es
-matched (Matching es) (Ny y) = (Nx . fst) <$> find (\(u, v) -> v == y) es
+matched (Matching es) n = (><) es find n
 
 -- difference
 a |-- b = filter (\x -> not $ x `elem` b) a
